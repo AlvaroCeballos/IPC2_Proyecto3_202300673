@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+<ListaMaquinas>
+    <Maquina>
+        <NombreMaquina>MC01IPC2</NombreMaquina>
+        <CantidadLineasProduccion>7</CantidadLineasProduccion>
+        <CantidadComponentes>16</CantidadComponentes>
+        <TiempoEnsamblaje>2</TiempoEnsamblaje>
+        <ListadoProductos>
+            <Producto>
+                <nombre>Reloj</nombre>
+                <elaboracion>
+                L1C3        L4C2    L1C2                L3C5    L6C6    L7C1    L2C14   L1C15   L7C16   L5C1
+                </elaboracion>
+            </Producto>
+            <Producto>
+                <nombre>Cable</nombre>
+                <elaboracion>
+                L1C2    L1C1 L7C3  L2C4    L5C3
+                </elaboracion>
+            </Producto>
+            <Producto>
+                <nombre>Mouse</nombre>
+                <elaboracion>
+                L1C2     L2C3 L3C2   L1C3 L7C16
+                </elaboracion>
+            </Producto>
+        </ListadoProductos>
+    </Maquina>
+    <Maquina>
+        <NombreMaquina>FabricaXpress</NombreMaquina>
+        <CantidadLineasProduccion>4</CantidadLineasProduccion>
+        <CantidadComponentes>6</CantidadComponentes>
+        <TiempoEnsamblaje>1</TiempoEnsamblaje>
+        <ListadoProductos>
+            <Producto>
+                <nombre>Laptops</nombre>
+                <elaboracion>
+                    L2C1                        L4C3 L3C5 L1C6
+                </elaboracion>
+            </Producto>
+            <Producto>
+                <nombre>Teléfonos móviles</nombre>
+                <elaboracion>
+                    L1C3 L3C2 L4C6                                                                          L2C5
+                </elaboracion>
+            </Producto>
+             <Producto>
+                <nombre>Televisores</nombre>
+                <elaboracion>
+                    L3C4 L1C1 L2C2 L4C5
+                </elaboracion>
+            </Producto>
+        </ListadoProductos>
+    </Maquina>
+</ListaMaquinas>
