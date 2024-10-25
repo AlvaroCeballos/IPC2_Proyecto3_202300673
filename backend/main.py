@@ -1,7 +1,7 @@
 from flask import Flask, jsonify, request, Response
 from flask_cors import CORS
 from xml.dom.minidom import parseString, Document
-import diccionario
+
 
 # Flask App
 app = Flask(__name__)
@@ -10,6 +10,28 @@ CORS(app)
 
 
 listaDiccionario = []
+listaMensajes = []
+listaEmpresas = []
+listaServicios = []
+
+class diccionario:
+    def __init__(self, sentimientos_positivos, sentimientos_negativos, empresas_analizar):
+        self.sentimientosPositivos = sentimientos_positivos
+        self.sentimientosNegativos = sentimientos_negativos
+        self.empresasAnalizar = empresas_analizar
+class empresa:
+    def __init__(self, nombre, servicios):
+        self.nombre = nombre
+        self.servicios = servicios
+
+class servicio:
+    def __init__(self, nombre, alias):
+        self.nombre = nombre
+        self.descripcion = alias
+
+class mensaje:
+    def __init__(self, mensaje):
+        self.mensaje = mensaje
 
 @app.route('/hola-mundo', methods=['GET'])
 def hola_mundo():
@@ -26,86 +48,128 @@ def hola_mundo():
 
 @app.route('/config/postDiccionarioXML', methods=['POST'])
 def postDiccionarioXML():
-    data = request.get_data().decode('utf-8').strip()
-    dom = parseString(data)
+    try:
+        xml_data = request.data
+        dom = parseString(xml_data)
+        
+        sentimientos_positivos = [node.firstChild.nodeValue.strip() for node in dom.getElementsByTagName('sentimientos_positivos')[0].getElementsByTagName('palabra')]
+        sentimientos_negativos = [node.firstChild.nodeValue.strip() for node in dom.getElementsByTagName('sentimientos_negativos')[0].getElementsByTagName('palabra')]
+        
+        empresas_analizar = []
+        for empresa_node in dom.getElementsByTagName('empresa'):
+            nombre = empresa_node.getElementsByTagName('nombre')[0].firstChild.nodeValue.strip()
+            servicios = []
+            for servicio_node in empresa_node.getElementsByTagName('servicio'):
+                nombre_servicio = servicio_node.getAttribute('nombre')
+                alias = [alias_node.firstChild.nodeValue.strip() for alias_node in servicio_node.getElementsByTagName('alias')]
+                servicios.append(servicio(nombre_servicio, alias))
+            empresas_analizar.append(empresa(nombre, servicios))
+        
+        listaDiccionario.append(diccionario(sentimientos_positivos, sentimientos_negativos, empresas_analizar))
+        
+        for mensaje_node in dom.getElementsByTagName('mensaje'):
+            mensaje_text = mensaje_node.firstChild.nodeValue.strip()
+            listaMensajes.append(mensaje(mensaje_text))
+        
+        response_doc = Document()
+        root = response_doc.createElement("Response")
+        response_doc.appendChild(root)
+        
+        status = response_doc.createElement("Status")
+        status.appendChild(response_doc.createTextNode("Success"))
+        root.appendChild(status)
+        
+        xml_response = response_doc.toxml(encoding='utf-8')
+        return Response(xml_response, mimetype='application/xml')
     
-    sentimientos_positivos = [palabra.firstChild.nodeValue.strip() for palabra in dom.getElementsByTagName('sentimientos_positivos')[0].getElementsByTagName('palabra')]
-    sentimientos_negativos = [palabra.firstChild.nodeValue.strip() for palabra in dom.getElementsByTagName('sentimientos_negativos')[0].getElementsByTagName('palabra')]
-    
-    empresas = dom.getElementsByTagName('empresa')
-    empresas_analizar = []
-    for empresa in empresas:
-        nombre = empresa.getElementsByTagName('nombre')[0].firstChild.nodeValue.strip()
-        servicios = empresa.getElementsByTagName('servicio')
-        servicios_dict = {}
-        for servicio in servicios:
-            servicio_nombre = servicio.getAttribute('nombre').strip()
-            alias_list = [alias.firstChild.nodeValue.strip() for alias in servicio.getElementsByTagName('alias')]
-            servicios_dict[servicio_nombre] = alias_list
-        empresas_analizar.append({'nombre': nombre, 'servicios': servicios_dict})
-    
-    nuevo_diccionario = diccionario.Diccionario(sentimientos_positivos, sentimientos_negativos, empresas_analizar)
-    listaDiccionario.append(nuevo_diccionario)
-    
-    doc = Document()
-    root = doc.createElement("Response")
-    doc.appendChild(root)
-    message = doc.createElement("Message")
-    message.appendChild(doc.createTextNode("XML de diccionario recibido"))
-    root.appendChild(message)
-    
-    xml_response = doc.toxml(encoding='utf-8')
-    return Response(xml_response, mimetype='application/xml')
+    except Exception as e:
+        response_doc = Document()
+        root = response_doc.createElement("Response")
+        response_doc.appendChild(root)
+        
+        status = response_doc.createElement("Status")
+        status.appendChild(response_doc.createTextNode("Failure"))
+        root.appendChild(status)
+        
+        error_message = response_doc.createElement("Error")
+        error_message.appendChild(response_doc.createTextNode(str(e)))
+        root.appendChild(error_message)
+        
+        xml_response = response_doc.toxml(encoding='utf-8')
+        return Response(xml_response, mimetype='application/xml')
 
 @app.route('/config/obtenerDiccionario', methods=['GET'])
 def obtenerDiccionario():
-    if not listaDiccionario:
-        return Response("<Response><Message>No hay diccionarios almacenados</Message></Response>", mimetype='application/xml')
-    
-    diccionario_obj = listaDiccionario[-1]
-    
-    doc = Document()
-    root = doc.createElement("diccionario")
-    doc.appendChild(root)
-    
-    sentimientos_positivos_elem = doc.createElement("sentimientos_positivos")
-    for palabra in diccionario_obj.sentimientosPositivos:
-        palabra_elem = doc.createElement("palabra")
-        palabra_elem.appendChild(doc.createTextNode(palabra))
-        sentimientos_positivos_elem.appendChild(palabra_elem)
-    root.appendChild(sentimientos_positivos_elem)
-    
-    sentimientos_negativos_elem = doc.createElement("sentimientos_negativos")
-    for palabra in diccionario_obj.sentimientosNegativos:
-        palabra_elem = doc.createElement("palabra")
-        palabra_elem.appendChild(doc.createTextNode(palabra))
-        sentimientos_negativos_elem.appendChild(palabra_elem)
-    root.appendChild(sentimientos_negativos_elem)
-    
-    empresas_analizar_elem = doc.createElement("empresas_analizar")
-    for empresa in diccionario_obj.empresasAnalizar:
-        empresa_elem = doc.createElement("empresa")
+    try:
+        response_doc = Document()
+        root = response_doc.createElement("Response")
+        response_doc.appendChild(root)
         
-        nombre_elem = doc.createElement("nombre")
-        nombre_elem.appendChild(doc.createTextNode(empresa['nombre']))
-        empresa_elem.appendChild(nombre_elem)
+        diccionario_element = response_doc.createElement("diccionario")
+        root.appendChild(diccionario_element)
         
-        servicios_elem = doc.createElement("servicios")
-        for servicio_nombre, alias_list in empresa['servicios'].items():
-            servicio_elem = doc.createElement("servicio")
-            servicio_elem.setAttribute("nombre", servicio_nombre)
-            for alias in alias_list:
-                alias_elem = doc.createElement("alias")
-                alias_elem.appendChild(doc.createTextNode(alias))
-                servicio_elem.appendChild(alias_elem)
-            servicios_elem.appendChild(servicio_elem)
-        empresa_elem.appendChild(servicios_elem)
+        for dic in listaDiccionario:
+            sentimientos_positivos_element = response_doc.createElement("sentimientos_positivos")
+            for palabra in dic.sentimientosPositivos:
+                palabra_element = response_doc.createElement("palabra")
+                palabra_element.appendChild(response_doc.createTextNode(palabra))
+                sentimientos_positivos_element.appendChild(palabra_element)
+            diccionario_element.appendChild(sentimientos_positivos_element)
+            
+            sentimientos_negativos_element = response_doc.createElement("sentimientos_negativos")
+            for palabra in dic.sentimientosNegativos:
+                palabra_element = response_doc.createElement("palabra")
+                palabra_element.appendChild(response_doc.createTextNode(palabra))
+                sentimientos_negativos_element.appendChild(palabra_element)
+            diccionario_element.appendChild(sentimientos_negativos_element)
+            
+            empresas_analizar_element = response_doc.createElement("empresas_analizar")
+            for emp in dic.empresasAnalizar:
+                empresa_element = response_doc.createElement("empresa")
+                
+                nombre_element = response_doc.createElement("nombre")
+                nombre_element.appendChild(response_doc.createTextNode(emp.nombre))
+                empresa_element.appendChild(nombre_element)
+                
+                servicios_element = response_doc.createElement("servicios")
+                for serv in emp.servicios:
+                    servicio_element = response_doc.createElement("servicio")
+                    servicio_element.setAttribute("nombre", serv.nombre)
+                    for alias in serv.descripcion:
+                        alias_element = response_doc.createElement("alias")
+                        alias_element.appendChild(response_doc.createTextNode(alias))
+                        servicio_element.appendChild(alias_element)
+                    servicios_element.appendChild(servicio_element)
+                empresa_element.appendChild(servicios_element)
+                
+                empresas_analizar_element.appendChild(empresa_element)
+            diccionario_element.appendChild(empresas_analizar_element)
         
-        empresas_analizar_elem.appendChild(empresa_elem)
-    root.appendChild(empresas_analizar_elem)
+        lista_mensajes_element = response_doc.createElement("lista_mensajes")
+        for msg in listaMensajes:
+            mensaje_element = response_doc.createElement("mensaje")
+            mensaje_element.appendChild(response_doc.createTextNode(msg.mensaje))
+            lista_mensajes_element.appendChild(mensaje_element)
+        root.appendChild(lista_mensajes_element)
+        
+        xml_response = response_doc.toxml(encoding='utf-8')
+        return Response(xml_response, mimetype='application/xml')
     
-    xml_response = doc.toxml(encoding='utf-8')
-    return Response(xml_response, mimetype='application/xml')
+    except Exception as e:
+        response_doc = Document()
+        root = response_doc.createElement("Response")
+        response_doc.appendChild(root)
+        
+        status = response_doc.createElement("Status")
+        status.appendChild(response_doc.createTextNode("Failure"))
+        root.appendChild(status)
+        
+        error_message = response_doc.createElement("Error")
+        error_message.appendChild(response_doc.createTextNode(str(e)))
+        root.appendChild(error_message)
+        
+        xml_response = response_doc.toxml(encoding='utf-8')
+        return Response(xml_response, mimetype='application/xml')
 
 
 if __name__ == '__main__':
