@@ -15,10 +15,10 @@ listaEmpresas = []
 listaServicios = []
 
 class diccionario:
-    def __init__(self, sentimientos_positivos, sentimientos_negativos, empresas_analizar):
-        self.sentimientosPositivos = sentimientos_positivos
-        self.sentimientosNegativos = sentimientos_negativos
-        self.empresasAnalizar = empresas_analizar
+    def __init__(self, sentimientosPositivos, sentimientosNegativos, empresasAnalizar):
+        self.sentimientosPositivos = sentimientosPositivos
+        self.sentimientosNegativos = sentimientosNegativos
+        self.empresasAnalizar = empresasAnalizar
 class empresa:
     def __init__(self, nombre, servicios):
         self.nombre = nombre
@@ -52,8 +52,8 @@ def postDiccionarioXML():
         xml_data = request.data
         dom = parseString(xml_data)
         
-        sentimientos_positivos = [node.firstChild.nodeValue.strip() for node in dom.getElementsByTagName('sentimientos_positivos')[0].getElementsByTagName('palabra')]
-        sentimientos_negativos = [node.firstChild.nodeValue.strip() for node in dom.getElementsByTagName('sentimientos_negativos')[0].getElementsByTagName('palabra')]
+        sentimientosPositivosLista = [node.firstChild.nodeValue.strip() for node in dom.getElementsByTagName('sentimientos_positivos')[0].getElementsByTagName('palabra')]
+        sentimientosNegativosLista = [node.firstChild.nodeValue.strip() for node in dom.getElementsByTagName('sentimientos_negativos')[0].getElementsByTagName('palabra')]
         
         empresas_analizar = []
         for empresa_node in dom.getElementsByTagName('empresa'):
@@ -65,7 +65,7 @@ def postDiccionarioXML():
                 servicios.append(servicio(nombre_servicio, alias))
             empresas_analizar.append(empresa(nombre, servicios))
         
-        listaDiccionario.append(diccionario(sentimientos_positivos, sentimientos_negativos, empresas_analizar))
+        listaDiccionario.append(diccionario(sentimientosPositivosLista, sentimientosNegativosLista, empresas_analizar))
         
         for mensaje_node in dom.getElementsByTagName('mensaje'):
             mensaje_text = mensaje_node.firstChild.nodeValue.strip()
@@ -102,7 +102,7 @@ def postDiccionarioXML():
 def obtenerDiccionario():
     try:
         response_doc = Document()
-        root = response_doc.createElement("Response")
+        root = response_doc.createElement("solicitud_clasificacion")
         response_doc.appendChild(root)
         
         diccionario_element = response_doc.createElement("diccionario")
