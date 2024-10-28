@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, request, Response
 from flask_cors import CORS
 from xml.dom.minidom import parseString, Document
+import unicodedata
 
 
 # Flask App
@@ -33,6 +34,16 @@ class mensaje:
     def __init__(self, mensaje):
         self.mensaje = mensaje
 
+def normalize_text(text):
+    # Convert to lowercase
+    text = text.lower()
+    # Remove accents
+    text = ''.join(
+        c for c in unicodedata.normalize('NFD', text)
+        if unicodedata.category(c) != 'Mn'
+    )
+    return text
+
 @app.route('/hola-mundo', methods=['GET'])
 def hola_mundo():
     doc = Document()
@@ -52,23 +63,32 @@ def postDiccionarioXML():
         xml_data = request.data
         dom = parseString(xml_data)
         
-        sentimientosPositivosLista = [node.firstChild.nodeValue.strip() for node in dom.getElementsByTagName('sentimientos_positivos')[0].getElementsByTagName('palabra')]
-        sentimientosNegativosLista = [node.firstChild.nodeValue.strip() for node in dom.getElementsByTagName('sentimientos_negativos')[0].getElementsByTagName('palabra')]
+        sentimientosPositivosLista = [
+            normalize_text(node.firstChild.nodeValue.strip()) 
+            for node in dom.getElementsByTagName('sentimientos_positivos')[0].getElementsByTagName('palabra')
+        ]
+        sentimientosNegativosLista = [
+            normalize_text(node.firstChild.nodeValue.strip()) 
+            for node in dom.getElementsByTagName('sentimientos_negativos')[0].getElementsByTagName('palabra')
+        ]
         
         empresas_analizar = []
         for empresa_node in dom.getElementsByTagName('empresa'):
-            nombre = empresa_node.getElementsByTagName('nombre')[0].firstChild.nodeValue.strip()
+            nombre = normalize_text(empresa_node.getElementsByTagName('nombre')[0].firstChild.nodeValue.strip())
             servicios = []
             for servicio_node in empresa_node.getElementsByTagName('servicio'):
-                nombre_servicio = servicio_node.getAttribute('nombre')
-                alias = [alias_node.firstChild.nodeValue.strip() for alias_node in servicio_node.getElementsByTagName('alias')]
+                nombre_servicio = normalize_text(servicio_node.getAttribute('nombre'))
+                alias = [
+                    normalize_text(alias_node.firstChild.nodeValue.strip()) 
+                    for alias_node in servicio_node.getElementsByTagName('alias')
+                ]
                 servicios.append(servicio(nombre_servicio, alias))
             empresas_analizar.append(empresa(nombre, servicios))
         
         listaDiccionario.append(diccionario(sentimientosPositivosLista, sentimientosNegativosLista, empresas_analizar))
         
         for mensaje_node in dom.getElementsByTagName('mensaje'):
-            mensaje_text = mensaje_node.firstChild.nodeValue.strip()
+            mensaje_text = normalize_text(mensaje_node.firstChild.nodeValue.strip())
             listaMensajes.append(mensaje(mensaje_text))
         
         response_doc = Document()
