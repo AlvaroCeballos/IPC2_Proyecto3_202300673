@@ -11,6 +11,7 @@ CORS(app)
 listaDiccionario = []
 listaMensajes = []
 listaFechas = []
+listaMensajePrueba = []
 
 class diccionario:
     def __init__(self, sentimientosPositivos, sentimientosNegativos, empresasAnalizar):
@@ -301,7 +302,7 @@ def obtenerDiccionarioMedioProcesado():
     
 @app.route('/config/postMensajePrueba', methods=['POST'])
 def postMensajePrueba():
-    listaMensajePrueba = []
+
 
     try:
         leerXML = request.data
@@ -309,6 +310,7 @@ def postMensajePrueba():
         mensajeXML = documentoXML.getElementsByTagName('mensaje')[0].firstChild.nodeValue.strip()
         mensajeNormalizado = minuscula(mensajeXML)
 
+        listaMensajePrueba.clear()
         listaMensajePrueba.append(mensaje(mensajeNormalizado))
 
     
@@ -335,6 +337,37 @@ def postMensajePrueba():
         xmlSalida = respuestaFXMLDoc.toxml(encoding='utf-8')
 
         return Response(xmlSalida, mimetype='application/xml')
+    
+@app.route('/config/obtenerMensajesPrueba', methods=['GET'])
+def obtenerMensajesPrueba():
+    try:
+        response_doc = Document()
+        root = response_doc.createElement("MensajesPrueba")
+        response_doc.appendChild(root)
+        
+        for msg in listaMensajePrueba:
+            mensaje_element = response_doc.createElement("mensaje")
+            mensaje_element.appendChild(response_doc.createTextNode(msg.mensaje))
+            root.appendChild(mensaje_element)
+        
+        xml_response = response_doc.toxml(encoding='utf-8')
+        return Response(xml_response, mimetype='application/xml')
+    
+    except Exception as e:
+        response_doc = Document()
+        root = response_doc.createElement("RespuestaEstado")
+        response_doc.appendChild(root)
+        
+        estadoActual = response_doc.createElement("Estado")
+        estadoActual.appendChild(response_doc.createTextNode("Algo ha salido muy mal, por favor revisar la estructura del XML"))
+        root.appendChild(estadoActual)
+        
+        fatalError = response_doc.createElement("Error")
+        fatalError.appendChild(response_doc.createTextNode(str(e)))
+        root.appendChild(fatalError)
+        
+        xml_response = response_doc.toxml(encoding='utf-8')
+        return Response(xml_response, mimetype='application/xml')
 
 #Ahora los mensajes del apartado de prueba
 if __name__ == '__main__':
