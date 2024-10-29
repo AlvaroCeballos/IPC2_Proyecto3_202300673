@@ -1,11 +1,47 @@
+
 <!DOCTYPE html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hola Mundo</title>
-</head>
-<body>
-    <h1>Hola Mundo</h1>
-</body>
-</html></html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind CDN -->
+
+    <title>Practica 3 de ipc2</title>
+    <style>
+      .bg-cover-custom {
+        background-image: url('https://blog.orange.es/wp-content/uploads/sites/4/2024/03/fondos-de-pantalla-3d-paisaje.jpg');
+        background-size: cover;
+        background-position: center;
+      }
+    </style>
+  </head>
+  <body class="bg-cover-custom">
+    {% include "navBar.html" %}
+
+    <div
+      class="h-screen mt-[70px] w-full flex items-center justify-center bg-opacity-5 bg-black"
+    >
+      <div
+        class="w-full max-w-md p-6 bg-[#E9ECEE] shadow-2xl rounded-lg flex flex-col items-center space-y-6"
+      >
+        <div class="w-full p-4 bg-white shadow-md rounded-lg">
+          <h1 class="text-2xl font-bold mb-4 text-center">Datos del estudiante</h1>
+          <p class="text-center">
+            Nombre: Alvaro Gabriel Ceballos Gil<br />
+            Carnet: 202300673
+          </p>
+        </div>
+        <div class="w-full p-4 bg-white shadow-md rounded-lg">
+          <h1 class="text-2xl font-bold mb-4 text-center">Documentación</h1>
+          <p class="text-center break-words">
+            <a href="https://github.com/AlvaroCeballos/IPC2_Proyecto3_202300673.git" class="text-blue-500 underline">
+              https://github.com/AlvaroCeballos/IPC2_Proyecto3_202300673.git
+            </a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
