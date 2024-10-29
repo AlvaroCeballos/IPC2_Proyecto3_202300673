@@ -174,7 +174,9 @@ def obtenerDiccionario():
         return Response(xmlSalida, mimetype='application/xml')
 
 #--------------------------------------------------------------------------------RESPUESTA SOLIDA DE LA APLICACION---------------------------------------------------------------
-
+#--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 @app.route('/config/postDiccionarioMedioProcesado', methods=['POST'])
 def postDiccionarioXMLMedioProcesado():
 
@@ -292,5 +294,48 @@ def obtenerDiccionarioMedioProcesado():
         nodoRaiz.appendChild(fatalError)
         xmlSalida = respuestaFXMLDoc.toxml(encoding='utf-8')
         return Response(xmlSalida, mimetype='application/xml')
+#--------------------------------------------------------------------------------FIN SOLIDO---------------------------------------------------------------
+#--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    
+@app.route('/config/postMensajePrueba', methods=['POST'])
+def postMensajePrueba():
+    listaMensajePrueba = []
+
+    try:
+        leerXML = request.data
+        documentoXML = parseString(leerXML)
+        mensajeXML = documentoXML.getElementsByTagName('mensaje')[0].firstChild.nodeValue.strip()
+        mensajeNormalizado = minuscula(mensajeXML)
+
+        listaMensajePrueba.append(mensaje(mensajeNormalizado))
+
+    
+        respuestaFXMLDoc = Document()
+        nodoRaiz = respuestaFXMLDoc.createElement("RespuestaEstado")
+        respuestaFXMLDoc.appendChild(nodoRaiz)
+        estadoActual = respuestaFXMLDoc.createElement("Estado")
+        estadoActual.appendChild(respuestaFXMLDoc.createTextNode("7 palabras, escencia "))
+        nodoRaiz.appendChild(estadoActual)
+        xmlSalida = respuestaFXMLDoc.toxml(encoding='utf-8')
+
+        return Response(xmlSalida, mimetype='application/xml')
+
+    except Exception as e:
+        respuestaFXMLDoc = Document()
+        nodoRaiz = respuestaFXMLDoc.createElement("RespuestaEstado")
+        respuestaFXMLDoc.appendChild(nodoRaiz)
+        estadoActual = respuestaFXMLDoc.createElement("Estado")
+        estadoActual.appendChild(respuestaFXMLDoc.createTextNode("Algo ha salido muy mal, por favor revisar la esstructura del XML"))
+        nodoRaiz.appendChild(estadoActual)
+        fatalError = respuestaFXMLDoc.createElement("Error")
+        fatalError.appendChild(respuestaFXMLDoc.createTextNode(str(e)))
+        nodoRaiz.appendChild(fatalError)
+        xmlSalida = respuestaFXMLDoc.toxml(encoding='utf-8')
+
+        return Response(xmlSalida, mimetype='application/xml')
+
+#Ahora los mensajes del apartado de prueba
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
